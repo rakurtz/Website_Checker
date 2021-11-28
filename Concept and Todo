@@ -1,0 +1,17 @@
+simple website checker
+
+Architektur
+- read default urls from config_file if exists
+- mulithreaded: website checks / display information / user interactions
+- substitute sql with internal storing (classes / objects)
+- use request.Session() ans also multithread (?)
+
+
+Interface
+- on key press: Quit
+- on key press: add URL to check
+- on key press: all urls / single url
+- on key press: show only errors
+
+Features
+- calculate average runtime
