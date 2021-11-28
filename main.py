@@ -11,13 +11,76 @@ from time import sleep
 # still working with sqlite3
 
 # basic parameters, may get overridden by config.conf
-INTERVAL = 2
-URLS = [
+_interval = 2
+_url_list = [
     "https://www.jura.uni-bonn.de",
-    "https://cloud.jura.uni-bonn.de",
-    "https://gpil.jura.uni-bonn.de",
-    "https://seminar.jura.uni-bonn.de"
+    "httpass://cloud.jura.uni-bonn.de",
 ]
+
+
+class AllObjects:
+    def __init__(self, url_list):
+        self.urls = url_list
+        self.objects = []
+        self.get_objects()
+
+    def get_objects(self):
+        for _ in self.urls:
+            self.objects.append(UrlObject(_))
+
+    def update_all(self):
+        for _ in self.objects:
+            _.update()
+
+    def print_all(self):
+        print("Last three checks of each url:")
+        for _ in self.objects:
+            print([print(f"{event}") for event in _.status_history[-3:]])
+            print()
+
+    def __repr__(self):
+        return f"contains a list of {len(self.objects)} UrlObjects"
+
+
+class UrlObject:
+    def __init__(self, url):
+        self.url = url
+        self.status = -1
+        self.runtime = 0
+        self.average_runtime = 0
+        self.status_history = []
+
+    def update(self):
+        now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+        try:
+            r = requests.get(self.url)
+            status = r.status_code
+            runtime = r.elapsed.total_seconds()
+
+        except Exception:  # request fails completely
+            status = -1
+            runtime = -1
+
+        self.status = status
+        self.runtime = runtime
+        self.status_history.append((now_string, status, runtime))
+        self.calculate_average_runtime()
+
+    def calculate_average_runtime(self):
+        if self.status == -1:
+            self.average_runtime = -1
+        else:
+            # TODO: -1 gets counted here... needs a change
+            self.average_runtime = sum([(float(event[2])) for event in self.status_history]) \
+                                   / len(self.status_history)
+
+    def reset(self):
+        self.status = -1
+        self.status_history = []
+
+    def __repr__(self):
+        return f"{self.url} is {self.status}"
 
 
 def read_config():
@@ -35,7 +98,7 @@ def read_config():
 
         else:
             if 1 < seconds < 15:
-                INTERVAL = seconds
+                _interval = seconds
 
             urllist_temp = []
             for url in urls:
@@ -46,7 +109,7 @@ def read_config():
                     print("skipped url {url}.")
 
             if len(urllist_temp) > 0:
-                URLS = urllist_temp
+                _url_list = urllist_temp
 
     else:
         with open("config.conf", "w") as config_file:
@@ -60,112 +123,29 @@ def read_config():
 
 
 
-
-
-
-
-
-# interval in seconds
-DATABASE = 'checks.db'
-
-# list of websites to check
-
-
-
-def db_connect(database):
-    # connect to database
-    try:
-        conn = sqlite3.connect(database, check_same_thread=False)
-    except:
-        print("Database error - quitting...")
-        sys.exit()
-    else:
-        return conn
-
-
-def db_ready_database():
-    # table exists?
-    sql_check_table = """SELECT name FROM sqlite_master WHERE type='table' AND name='checks'"""
-
-    c.execute(sql_check_table)
-    if len(c.fetchall()) != 1:
-        sql_create = """CREATE TABLE checks (id INTEGER PRIMARY KEY, site TEXT NOT NULL, date TEXT, result INTEGER, runtime INTEGER)"""
-        c.execute(sql_create)
-        conn.commit()
-
-
-def db_write_to_database(result):
-    (site, time_str, status_code, runtime) = result
-    sql = """INSERT INTO checks (site, date, result, runtime) VALUES (?,?,?,?)"""
-    c.execute(sql, (site, time_str, status_code, runtime))
-    conn.commit()
-
-
-def check_all():
-    for site in URLS:
-        try:
-            r = requests.get(site)
-            if r.status_code == 200:
-                now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-                runtime = r.elapsed.total_seconds()
-                result = (site, now_string, 200, runtime)
-                db_write_to_database(result)
-            else:
-                now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-                runtime = r.elapsed.total_seconds()
-                result = (site, now_string, r.status_code, runtime)
-                db_write_to_database(result)
-
-        except Exception:   # request fails
-            now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            result = (site, now_string, -1, -1)
-            db_write_to_database(result)
-
-    sleep(INTERVAL)
-
-
-def display_information(website_index=-1):
-    """
-    :param website_index:   -1 returns all results for all websites
-                            0 - len(URLS) returns results of specific website
-    """
-
-    os.system('clear')
-
-    # generate sql command in list
-    sql = []
-    if -1 < website_index < len(URLS):
-        sql.append(f"""SELECT * FROM checks WHERE site = '{URLS[website_index]}' ORDER BY site, date LIMIT 20""")
-    elif website_index == -1:
-        for website in URLS:
-            sql.append(f"""SELECT * FROM checks WHERE site = '{website}' ORDER BY site, date LIMIT 3""")
-    else:
-        # TODO: raise exception
-        print("display_information() - we are out of index")
-        sys.exit()
-
-    for _ in sql:
-        c.execute(_)
-        result = c.fetchall()
-        print(f"Checks for {result[0][1]}:")
-        for line in result:
-            print(f".................{line[2:]}")
-    sleep(INTERVAL)
+def display_information():
+    os.system("clear")
+    for object in url_objects.objects:
+        print(f"{object.url}        right now: {object.status}      average runtime: {object.average_runtime:.3f}")
+        for event in object.status_history[-3:]:
+            print(f"            {event[0]}:     STATUS: {event[1]}      runtime: {event[2]:.4f}")
+        print()
 
 
 if __name__ == '__main__':
     read_config()
-    conn = db_connect(DATABASE)
-    c = conn.cursor()
-    db_ready_database()
+    url_objects = AllObjects(_url_list)
 
-    # different threads for websites checks and displaying information
+    o = url_objects.objects[0]
+    pass
+    for i in range(10):
+        url_objects.update_all()
+        display_information()
+        sleep(2)
 
-    with futures.ThreadPoolExecutor(max_workers=2) as e:
-        e.submit(check_all)
-        e.submit(display_information)
 
-
+    print("eins vor ende")
+    print("ende")
 
 
 
