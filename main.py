@@ -7,6 +7,9 @@ import requests
 from datetime import datetime
 from time import sleep
 
+# version 0.2
+# still working with sqlite3
+
 # basic parameters, may get overridden by config.conf
 INTERVAL = 2
 URLS = [
