@@ -1,5 +1,12 @@
 import os
 
+
+class ViewSate:
+    """ used to store the actual view modified by controls module"""
+    VIEW = 0
+    ACTIVE_URL = 0
+
+
 class Term:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -12,20 +19,25 @@ class Term:
     UNDERLINE = '\033[4m'
 
 
-def display_information(url_objects, INTERVAL):
+def display_information(url_objects):
+    if ViewSate.VIEW == 0:
+        view_all(url_objects)
+    elif ViewSate.VIEW == 1:
+        view_single(url_objects)
+
+
+def view_all(url_objects):
     def format_status(status):
         if status == 200:
             return Term.OKGREEN + "OK" + Term.ENDC
         elif status > 200:
-            # TODO: yellow doesn't seam to work. But why?
             return Term.WARNING + str(status) + Term.ENDC
         else:
             return Term.FAIL + "FAILED" + Term.ENDC
 
     os.system("clear")
 
-    print(f"URL-Checker\n"
-          f"Interval: {INTERVAL}\n")
+    print(f"URL-Checker\n")
 
     for url_object in url_objects.objects:
         print(f"{url_object.url:35}  AVERAGE_RUNTIME: {url_object.average_runtime:<8.3f} \
@@ -34,3 +46,8 @@ def display_information(url_objects, INTERVAL):
         for event in url_object.status_history[-3:]:
             print(f"{event[0]:>25}  RUNTIME: {event[2]:8.4f} STATUS: {format_status(event[1]):>5}")
         print()
+
+
+def view_single(url_objects):
+    os.system("clear")
+    print("Needs to be implemented. Return to man main view with 's'")
