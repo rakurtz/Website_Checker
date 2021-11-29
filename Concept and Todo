@@ -3,8 +3,9 @@ simple website checker
 Architektur
 - read default urls from config_file if exists
 - mulithreaded: website checks / display information / user interactions
-- substitute sql with internal storing (classes / objects)
+- (substitute sql with internal storing (classes / objects)                 done
 - use request.Session() ans also multithread (?)
+- split main.py into different local modules (packages)
 
 
 Interface
@@ -14,4 +15,6 @@ Interface
 - on key press: show only errors
 
 Features
-- calculate average runtime
+- (calculate average runtime)             done
+- use pickle to save state of objects and reload them next time
+- always view last seen / last error
