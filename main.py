@@ -1,8 +1,6 @@
-import sys
-from concurrent import futures
-from time import sleep
 import threading
 import queue
+from time import sleep
 
 from mymodules.config import read_config, MyConfig
 from mymodules.classes import AllObjects
@@ -27,21 +25,10 @@ if __name__ == '__main__':
         update_urls_thread = threading.Thread(target=url_objects.update_all, daemon=True)
         update_urls_thread.start()
 
-        display_thread = threading.Thread(target=display_information, args=(url_objects,), daemon=True)
+        display_thread = threading.Thread(target=display_information, args=(url_objects,))
         display_thread.start()
 
         sleep(MyConfig.INTERVAL)
-
-
-    sys.exit()
-    with futures.ThreadPoolExecutor(max_workers=5) as e:
-        e.submit(my_controls, input_queue)
-        e.submit(read_kbd_input, input_queue)
-
-        while True:
-            e.submit(url_objects.update_all)
-            e.submit(display_information, url_objects)
-            sleep(MyConfig.INTERVAL)
 
 
 
