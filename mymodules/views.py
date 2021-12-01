@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 
 class ViewSate:
@@ -20,10 +21,12 @@ class Term:
 
 
 def display_information(url_objects):
-    if ViewSate.VIEW == 0:
-        view_all(url_objects)
-    elif ViewSate.VIEW == 1:
-        view_single(url_objects)
+    while True:
+        if ViewSate.VIEW == 0:
+            view_all(url_objects)
+        elif ViewSate.VIEW == 1:
+            view_single(url_objects)
+        sleep(0.2)
 
 
 def view_all(url_objects):
@@ -36,10 +39,9 @@ def view_all(url_objects):
             return Term.FAIL + "FAILED" + Term.ENDC
 
     os.system("clear")
-
     print(f"URL-Checker\n")
 
-    for url_object in url_objects.objects:
+    for url_object in url_objects.url_objects:
         print(f"{url_object.url:35}  AVERAGE_RUNTIME: {url_object.average_runtime:<8.3f} \
                     STATUS_NOW: {format_status(url_object.status):>5}")
 
@@ -50,4 +52,4 @@ def view_all(url_objects):
 
 def view_single(url_objects):
     os.system("clear")
-    print("Needs to be implemented. Return to man main view with 's'")
+    print("Needs to be implemented. Return to man main view with 'm'")

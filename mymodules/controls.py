@@ -2,8 +2,7 @@
 import queue
 import sys
 import time
-
-
+from threading import Lock
 from .views import ViewSate
 
 
@@ -21,7 +20,7 @@ def my_controls(input_queue):
     SINGLE_VIEW = "s"
     SELECT_URL = "0123456789"
 
-
+    lock = Lock()
 
     while True:
         if input_queue.qsize() > 0:
@@ -31,10 +30,13 @@ def my_controls(input_queue):
                 print("Exiting serial terminal.")
                 return -1
             elif input_str == MAIN_VIEW:
-                ViewSate.VIEW = 0
+                with lock:
+                    ViewSate.VIEW = 0
             elif input_str == SINGLE_VIEW:
-                ViewSate.VIEW = 1
+                with lock:
+                    ViewSate.VIEW = 1
             elif input_str in SELECT_URL:
-                ViewSate.ACTIVE_URL = input_str
+                with lock:
+                    ViewSate.ACTIVE_URL = input_str
 
-        time.sleep(0.01)
+        time.sleep(0.1)
