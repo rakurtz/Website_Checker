@@ -1,5 +1,5 @@
 # Website_Checker
-# rakurtz - feel free to reuse.
+rakurtz - feel free to reuse.
 
 little website checker console program
 
